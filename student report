@@ -1,0 +1,260 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+
+using namespace std;
+
+class student
+{
+     int rollno;
+    char name[50];
+    int SE_marks, CS_marks, COA_marks, OOPS_marks, FLAT_marks;
+    double average;
+    char grade;
+
+public:
+     void getdata();
+    void showdata() const;
+    void calculate();
+    int retrollno() const;
+
+    void writeToFile(ofstream& outFile) const;
+    void readFromFile(ifstream& inFile);
+    static bool isRollNoExists(int rollNo);
+};
+
+bool student::isRollNoExists(int rollNo)
+{
+    ifstream iFile("student.data", ios::binary);
+    if (!iFile)
+    {
+        cerr << "File could not be opened... Press any key to exit.";
+        cin.ignore();
+        cin.get();
+        exit(EXIT_FAILURE);
+    }
+
+    student stud;
+    while (iFile.read((char*)&stud, sizeof(student)))
+    {
+        if (stud.retrollno() == rollNo)
+        {
+            iFile.close();
+            return true;
+        }
+    }
+
+    iFile.close();
+    return false;
+}
+
+void create_student()
+{
+    student stud;
+    int rollNumber;
+    bool isRollNumberUnique = true;
+
+
+    cout << "\nEnter student's roll number to check if it already exists: ";
+    cin >> rollNumber;
+
+
+    ifstream iFile("student.data", ios::binary);
+    while (iFile.read((char*)&stud, sizeof(student)))
+    {
+        if (stud.retrollno() == rollNumber)
+        {
+            cout << "\nRoll number already exists. Please enter a unique roll number.";
+            isRollNumberUnique = false;
+            break;
+        }
+    }
+    iFile.close();
+
+    if (isRollNumberUnique)
+    {
+        // Open the file for appending
+        ofstream oFile("student.data", ios::binary | ios::app);
+
+        // Set the roll number and get other data
+        cout<<"\n Roll number does not exist you can create new entry \n";
+        stud.getdata();
+        stud.writeToFile(oFile);
+
+        cout << "\n\nStudent record has been created.";
+        cin.ignore();
+    }
+    else
+    {
+        cout << "\n\nStudent record not created due to duplicate roll number.";
+        cin.ignore();
+}
+}
+
+void student::calculate()
+{
+    average = (SE_marks + CS_marks + COA_marks + OOPS_marks + FLAT_marks) / 5.0;
+    if (average >= 90)
+        grade = 'A';
+    else if (average >= 75)
+        grade = 'B';
+    else if (average >= 50)
+        grade = 'C';
+    else
+        grade = 'F';
+}
+
+void student::getdata()
+{
+    cout << "\nEnter roll number for new student: ";
+    cin >> rollno;
+    cout << "\nEnter student name: ";
+    cin.ignore();
+
+    cin.getline(name, 50);
+    cout << "\nAll marks should be out of 100";
+    cout << "\nEnter marks OF SE: ";
+    cin >> SE_marks;
+    cout << "Enter marks OF CS: ";
+    cin >> CS_marks;
+    cout << "Enter marks OF COA: ";
+    cin >> COA_marks;
+    cout << "Enter marks OF OOPS: ";
+    cin >> OOPS_marks;
+    cout << "Enter marks OF FLAT: ";
+    cin >> FLAT_marks;
+    calculate();
+}
+
+
+
+
+void student::showdata() const
+{
+    cout << "===========================================================" << endl;
+    cout << "|                   Student Record                          |" << endl;
+    cout << "|---------------------------------------------------------|" << endl;
+    cout << "| Roll number     : " << setw(37) << left << rollno << "|" << endl;
+    cout << "| Name            : " << setw(37) << left << name << "|" << endl;
+    cout << "| SE Marks        : " << setw(37) << left << SE_marks << "|" << endl;
+    cout << "| CS Marks        : " << setw(37) << left << CS_marks << "|" << endl;
+    cout << "| COA Marks       : " << setw(37) << left << COA_marks << "|" << endl;
+    cout << "| OOPS Marks      : " << setw(37) << left << OOPS_marks << "|" << endl;
+    cout << "| FLAT Marks      : " << setw(37) << left << FLAT_marks << "|" << endl;
+    cout << "| Average Marks   : " << setw(37) << left << average << "|" << endl;
+    cout << "| Grade           : " << setw(37) << left << grade << "|" << endl;
+    cout << "===========================================================" << endl;
+}
+
+
+int student::retrollno() const
+{
+    return rollno;
+}
+
+void student::writeToFile(ofstream& outFile) const
+{
+    outFile.write((char*)this, sizeof(student));
+}
+
+void student::readFromFile(ifstream& inFile)
+{
+    inFile.read((char*)this, sizeof(student));
+}
+
+void display_sp(int n)
+{
+    student stud;
+    ifstream iFile("student.data", ios::binary);
+    if (!iFile)
+    {
+        cout << "File could not be opened... Press any key to exit.";
+        cin.ignore();
+        cin.get();
+        return;
+    }
+    bool flag = false;
+    while (iFile.read((char*)&stud, sizeof(student)))
+    {
+        if (stud.retrollno() == n)
+        {
+            stud.showdata();
+            flag = true;
+        }
+    }
+    iFile.close();
+    if (!flag)
+        cout << "\n\nRecord does not exist.";
+    cin.ignore();
+    cin.get();
+}
+
+void write_all_to_file()
+{
+    student stud;
+    ifstream inFile("student.data", ios::binary);
+    ofstream outFile("output.txt");
+
+    if (!inFile || !outFile)
+    {
+        cout << "File could not be opened! Press any key to exit.";
+        cin.ignore();
+        cin.get();
+        return;
+    }
+
+    outFile << "\n\n\n\t\tDISPLAYING ALL RECORDS\n\n";
+    while (inFile.read((char*)&stud, sizeof(student)))
+    {
+        stud.showdata();
+        cout << "\n\n====================\n";
+    }
+
+    inFile.close();
+    outFile.close();
+
+    cout << "\n\nAll records have been written to the file 'output.txt'.";
+    cin.ignore();
+    cin.get();
+}
+
+int main()
+{
+    char ch;
+    do
+    {
+          int num;
+        cout << "\n\n\tMENU";
+        cout << "\n\t1. Create student record";
+        cout << "\n\t2. Search student record";
+        cout << "\n\t3. Write in the file";
+        cout << "\n\t4. Exit";
+        cout << "\n\n\tWhat is your Choice (1/2/3/4): ";
+        cin >> ch;
+        system("cls");
+
+        switch (ch)
+        {
+        case '1':
+            create_student();
+            break;
+
+        case '2':
+            cout << "\n\tEnter The roll number: ";
+            cin >> num;
+            display_sp(num);
+            break;
+        case '4':
+            cout << "Exiting";
+            exit(0);
+        case '3':
+            write_all_to_file();
+            break;
+        default:
+            cout << "Invalid choice. Please enter a valid option (1/2/3/4).";
+        }
+
+
+    } while (ch != '4');
+return 0;
+}
